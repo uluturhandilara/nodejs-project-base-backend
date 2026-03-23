@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const RolePrivileges = require("./RolePrivileges");
 
 const schema = mongoose.Schema(
   {
@@ -17,7 +18,13 @@ const schema = mongoose.Schema(
   },
 );
 
-class Roles extends mongoose.Model {}
+class Roles extends mongoose.Model {
+  // eğer role silindiğinde o role ait olan yetkileri de silmek istiyorsak bu methodu kullanabiliriz
+  async deleteOne(query) {
+    if (query._id) await RolePrivileges.deleteMany({ role_id: query._id });
+    await super.deleteOne(query);
+  }
+}
 
 schema.loadClass(Roles);
 module.exports = mongoose.model("roles", schema);

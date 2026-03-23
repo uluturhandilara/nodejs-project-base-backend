@@ -12,13 +12,20 @@ class Response {
   }
 
   static errorResponse(error) {
-    console.log(error);
     if (error instanceof CustomError) {
       return {
         code: error.code,
         error: {
           message: error.message,
           description: error.description,
+        },
+      };
+    } else if (error.message.includes("E11000")) {
+      return {
+        code: Enum.HTTP_CODES.CONFLICT,
+        error: {
+          message: "Already exists!",
+          description: "This record already exists in the database.",
         },
       };
     }
