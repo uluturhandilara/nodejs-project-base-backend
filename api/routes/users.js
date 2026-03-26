@@ -7,6 +7,8 @@ const Users = require("../db/models/Users");
 const Response = require("../lib/Response");
 const CustomError = require("../lib/Error");
 const Enum = require("../config/Enum");
+const UserRoles = require("../db/models/UserRoles");
+const Roles = require("../db/models/Roles");
 
 router.get("/", async (req, res) => {
   try {
@@ -169,13 +171,25 @@ router.post("/register", async (req, res) => {
       );
 
     let password = bcrypt.hashSync(body.password, bcrypt.genSaltSync(8), null);
-    await Users.create({
+
+    let createdUser = await Users.create({
       email: body.email,
       password,
       is_active: true,
       first_name: body.first_name,
       last_name: body.last_name,
       phone_number: body.phone_number,
+    });
+
+    let role = await Roles.create({
+      role_name: Enum.SUPER_ADMIN,
+      is_active: true,
+      created_by: createdUser._id,
+    });
+
+    await UserRoles.create({
+      role_id: role._id,
+      user_id: createdUser._id,
     });
 
     res
