@@ -107,4 +107,23 @@ router.put("/update", async (req, res) => {
   }
 });
 
+router.delete("/delete", async (req, res) => {
+  let body = req.body;
+  try {
+    if (!body._id)
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Validation error!",
+        "_id field must be filled",
+      );
+
+    await Users.deleteOne({ _id: body._id });
+
+    res.json(Response.successResponse({ success: true }));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(error);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
 module.exports = router;
