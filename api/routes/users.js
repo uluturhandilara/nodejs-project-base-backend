@@ -138,7 +138,7 @@ router.put("/update", async (req, res) => {
 
       if (removedRoles.length > 0) {
         await UserRoles.deleteMany({
-          _id: { $in: removedRoles.map((x) => x._id) },
+          _id: { $in: removedRoles.map((x) => x._id.toString()) },
         });
       }
 
