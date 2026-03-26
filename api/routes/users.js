@@ -54,8 +54,26 @@ router.post("/add", async (req, res) => {
           " characters",
       );
 
+    if (!body.roles || !Array.isArray(body.roles) || body.roles.length === 0) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Validation error!",
+        "roles field must be an array",
+      );
+    }
+
+    let roles = await Roles.find({ _id: { $in: body.roles } });
+
+    if (roles.length === 0) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Validation error!",
+        "roles field must be an array",
+      );
+    }
+
     let password = bcrypt.hashSync(body.password, bcrypt.genSaltSync(8), null);
-    await Users.create({
+    let user = await Users.create({
       email: body.email,
       password,
       is_active: true,
@@ -63,6 +81,13 @@ router.post("/add", async (req, res) => {
       last_name: body.last_name,
       phone_number: body.phone_number,
     });
+
+    for (let i = 0; i < roles.length; i++) {
+      await UserRoles.create({
+        role_id: roles[i]._id,
+        user_id: user._id,
+      });
+    }
 
     res
       .status(Enum.HTTP_CODES.CREATED)
@@ -100,6 +125,35 @@ router.put("/update", async (req, res) => {
     if (body.last_name) updates.last_name = body.last_name;
     if (body.phone_number) updates.phone_number = body.phone_number;
 
+    if (Array.isArray(body.roles) && body.roles.length > 0) {
+      let userRoles = await UserRoles.find({ user_id: body._id });
+
+      let removedRoles = userRoles.filter(
+        (x) => !body.roles.includes(x.role_id),
+      );
+
+      let newRoles = body.roles.filter(
+        (x) => !userRoles.map((r) => r.role_id).includes(x),
+      );
+
+      if (removedRoles.length > 0) {
+        await UserRoles.deleteMany({
+          _id: { $in: removedRoles.map((x) => x._id) },
+        });
+      }
+
+      if (newRoles.length > 0) {
+        for (let i = 0; i < newRoles.length; i++) {
+          let userRole = new UserRoles({
+            role_id: newRoles.role_id,
+            user_id: body._id,
+          });
+
+          await userRole.save();
+        }
+      }
+    }
+
     await Users.updateOne({ _id: body._id }, updates);
 
     res.json(Response.successResponse({ success: true }));
@@ -120,6 +174,8 @@ router.delete("/delete", async (req, res) => {
       );
 
     await Users.deleteOne({ _id: body._id });
+
+    await UserRoles.deleteMany({ user_id: body._id });
 
     res.json(Response.successResponse({ success: true }));
   } catch (error) {
