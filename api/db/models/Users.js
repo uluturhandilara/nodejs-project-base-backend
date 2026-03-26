@@ -8,7 +8,6 @@ const schema = mongoose.Schema(
     first_name: String,
     last_name: String,
     phone_number: String,
-    language: { type: String, default: DEFAULT_LANG },
   },
   {
     versionKey: false,
