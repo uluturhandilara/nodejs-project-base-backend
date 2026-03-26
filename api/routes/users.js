@@ -145,7 +145,7 @@ router.put("/update", async (req, res) => {
       if (newRoles.length > 0) {
         for (let i = 0; i < newRoles.length; i++) {
           let userRole = new UserRoles({
-            role_id: newRoles[i].role_id,
+            role_id: newRoles[i],
             user_id: body._id,
           });
 
