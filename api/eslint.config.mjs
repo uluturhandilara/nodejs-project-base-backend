@@ -8,6 +8,11 @@ export default defineConfig([
     plugins: { js },
     extends: ["js/recommended"],
     languageOptions: { globals: globals.browser },
+    rules: {
+      "no-unused-vars": "warn",
+      "no-unused-labels": "warn",
+      "no-unused-private-class-members": "warn",
+    },
   },
   { files: ["**/*.js"], languageOptions: { sourceType: "commonjs" } },
 ]);
