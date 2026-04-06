@@ -134,7 +134,7 @@ router.put("/update", async (req, res) => {
   }
 });
 
-router.delete("/delete", async (req, res) => {
+router.delete("/delete",auth.checkRoles("role_delete"), async (req, res) => {
   let body = req.body;
   try {
     if (!body._id)

@@ -134,7 +134,7 @@ router.all("*", auth.authenticate(), (req, res, next) => {
   next();
 });
 
-router.get("/", async (req, res) => {
+router.get("/", auth.checkRoles("user_view"), async (req, res) => {
   try {
     let users = await Users.find({});
 
@@ -287,7 +287,7 @@ router.put("/update", async (req, res) => {
   }
 });
 
-router.delete("/delete", async (req, res) => {
+router.delete("/delete", auth.checkRoles("user_delete"), async (req, res) => {
   let body = req.body;
   try {
     if (!body._id)
