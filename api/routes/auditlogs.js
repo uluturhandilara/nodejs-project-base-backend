@@ -9,7 +9,8 @@ router.all("*", auth.authenticate(), (req, res, next) => {
   next();
 });
 
-router.post("/", auth.checkRoles("auditlogs_view"), async (req, res) => {
+// auth.checkRoles("auditlogs_view") yetkisi eklenecek
+router.post("/", async (req, res) => {
   try {
     let body = req.body;
     let query = {};
@@ -42,7 +43,7 @@ router.post("/", auth.checkRoles("auditlogs_view"), async (req, res) => {
       .limit(limit);
     res.json(Response.successResponse(auditLogs));
   } catch (error) {
-    let errorResponse = Response.errorResponse(error);
+    let errorResponse = Response.errorResponse(error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });

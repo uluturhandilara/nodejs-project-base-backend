@@ -7,7 +7,9 @@ const CustomError = require("../lib/Error");
 const Enum = require("../config/Enum");
 const AuditLogs = require("../lib/AuditLogs");
 const logger = require("../lib/logger/LoggerClass");
+const config = require("../config");
 const auth = require("../lib/auth")();
+const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
 
 router.all("*", auth.authenticate(), (req, res, next) => {
   next();
@@ -24,15 +26,17 @@ router.get("/", auth.checkRoles("category_view"), async (req, res) => {
   }
 });
 
-router.post("/add",auth.checkRoles("category_add"), async (req, res) => {
+router.post("/add", auth.checkRoles("category_add"), async (req, res) => {
   let body = req.body;
 
   try {
     if (!body.name)
       throw new CustomError(
         Enum.HTTP_CODES.BAD_REQUEST,
-        "Validation error!",
-        "name field must be filled",
+        i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user.language),
+        i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user.language, [
+          "name",
+        ]),
       );
 
     let category = new Categories({
@@ -54,15 +58,17 @@ router.post("/add",auth.checkRoles("category_add"), async (req, res) => {
   }
 });
 
-router.put("/update",auth.checkRoles("category_update"), async (req, res) => {
+router.put("/update", auth.checkRoles("category_update"), async (req, res) => {
   let body = req.body;
 
   try {
     if (!body._id)
       throw new CustomError(
         Enum.HTTP_CODES.BAD_REQUEST,
-        "Validation error!",
-        "_id field must be filled",
+        i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user.language),
+        i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user.language, [
+          "_id",
+        ]),
       );
 
     if (!mongoose.isValidObjectId(body._id))
@@ -104,28 +110,34 @@ router.put("/update",auth.checkRoles("category_update"), async (req, res) => {
   }
 });
 
-router.delete("/delete",auth.checkRoles("category_delete"), async (req, res) => {
-  let body = req.body;
+router.delete(
+  "/delete",
+  auth.checkRoles("category_delete"),
+  async (req, res) => {
+    let body = req.body;
 
-  try {
-    if (!body._id)
-      throw new CustomError(
-        Enum.HTTP_CODES.BAD_REQUEST,
-        "Validation error!",
-        "_id field must be filled",
-      );
+    try {
+      if (!body._id)
+        throw new CustomError(
+          Enum.HTTP_CODES.BAD_REQUEST,
+          i18n.translate("COMMON.VALIDATION_ERROR_TITLE", req.user.language),
+          i18n.translate("COMMON.FIELD_MUST_BE_FILLED", req.user.language, [
+            "_id",
+          ]),
+        );
 
-    await Categories.deleteOne({ _id: body._id });
+      await Categories.deleteOne({ _id: body._id });
 
-    AuditLogs.info(req.user?.email, "Categories", "Delete", {
-      _id: body._id,
-    });
+      AuditLogs.info(req.user?.email, "Categories", "Delete", {
+        _id: body._id,
+      });
 
-    res.json(Response.successResponse({ success: true }));
-  } catch (error) {
-    let errorResponse = Response.errorResponse(error);
-    res.status(errorResponse.code).json(errorResponse);
-  }
-});
+      res.json(Response.successResponse({ success: true }));
+    } catch (error) {
+      let errorResponse = Response.errorResponse(error);
+      res.status(errorResponse.code).json(errorResponse);
+    }
+  },
+);
 
 module.exports = router;
