@@ -11,6 +11,8 @@ const config = require("../config");
 const auth = require("../lib/auth")();
 const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
 const emitter = require("../lib/Emitter");
+const excelExport = new (require("../lib/Export"))();
+const fs = require("fs");
 
 router.all("*", auth.authenticate(), (req, res, next) => {
   next();
@@ -144,5 +146,30 @@ router.delete(
     }
   },
 );
+
+// auth.checkRoles("category_export")
+router.post("/export", async (req, res) => {
+  try {
+    let categories = await Categories.find({});
+
+    // excel'i aldım,
+    let excel = excelExport.toExcel(
+      ["NAME", "IS ACTIVE?", "USER_ID", "CREATED AT", "UPDATED AT"],
+      ["name", "is_active", "created_by", "created_at", "updated_at"],
+      categories,
+    );
+    // excel'i dosyaya yazdım,
+    let filePath =
+      // eslint-disable-next-line no-undef
+      __dirname + "/../tmp/categories_excel_" + Date.now() + ".xlsx";
+
+    fs.writeFileSync(filePath, excel, "UTF-8");
+    // excel'i indirmek için dosyayı indirir.
+    res.download(filePath);
+  } catch (err) {
+    let errorResponse = Response.errorResponse(err);
+    res.status(errorResponse.code).json(Response.errorResponse(err));
+  }
+});
 
 module.exports = router;
