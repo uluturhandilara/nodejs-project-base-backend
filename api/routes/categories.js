@@ -52,7 +52,7 @@ router.post("/add", async (req, res) => {
     AuditLogs.info(req.user?.email, "Categories", "Add", category);
     logger.info(req.user?.email, "Categories", "Add", category);
     emitter.getEmitter("notifications").emit("messages", {
-      message: category.name + "is added",r
+      message: category.name + "is added",
     });
 
     res.json(Response.successResponse({ success: true }));
