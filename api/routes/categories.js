@@ -10,6 +10,7 @@ const logger = require("../lib/logger/LoggerClass");
 const config = require("../config");
 const auth = require("../lib/auth")();
 const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
+const emitter = require("../lib/Emitter");
 
 router.all("*", auth.authenticate(), (req, res, next) => {
   next();
@@ -26,7 +27,8 @@ router.get("/", auth.checkRoles("category_view"), async (req, res) => {
   }
 });
 
-router.post("/add", auth.checkRoles("category_add"), async (req, res) => {
+// auth.checkRoles("category_add"),
+router.post("/add", async (req, res) => {
   let body = req.body;
 
   try {
@@ -49,6 +51,9 @@ router.post("/add", auth.checkRoles("category_add"), async (req, res) => {
 
     AuditLogs.info(req.user?.email, "Categories", "Add", category);
     logger.info(req.user?.email, "Categories", "Add", category);
+    emitter.getEmitter("notifications").emit("messages", {
+      message: category.name + "is added",r
+    });
 
     res.json(Response.successResponse({ success: true }));
   } catch (error) {
