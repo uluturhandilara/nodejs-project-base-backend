@@ -13,6 +13,24 @@ const i18n = new (require("../lib/i18n"))(config.DEFAULT_LANG);
 const emitter = require("../lib/Emitter");
 const excelExport = new (require("../lib/Export"))();
 const fs = require("fs");
+const multer = require("multer");
+const path = require("path");
+const Import = new (require("../lib/Import"))();
+
+// request ile atılan bir dosyayı upload eder
+let multerStorage = multer.diskStorage({
+  destination: (req, file, next) => {
+    next(null, config.FILE_UPLOAD_PATH);
+  },
+  filename: (req, file, next) => {
+    next(
+      null,
+      file.fieldname + "_" + Date.now() + path.extname(file.originalname),
+    );
+  },
+});
+
+const upload = multer({ storage: multerStorage }).single("pb_file");
 
 router.all("*", auth.authenticate(), (req, res, next) => {
   next();
@@ -166,6 +184,32 @@ router.post("/export", async (req, res) => {
     fs.writeFileSync(filePath, excel, "UTF-8");
     // excel'i indirmek için dosyayı indirir.
     res.download(filePath);
+  } catch (err) {
+    let errorResponse = Response.errorResponse(err);
+    res.status(errorResponse.code).json(Response.errorResponse(err));
+  }
+});
+
+// auth.checkRoles("category_add")
+router.post("/import", upload, async (req, res) => {
+  try {
+    let file = req.file;
+    let rows = Import.fromExcel(file.path);
+
+    for (let i = 1; i < rows.length; i++) {
+      let [name, is_active] = rows[i];
+      if (name) {
+        await Categories.create({
+          name,
+          is_active,
+          created_by: req.user._id,
+        });
+      }
+    }
+
+    res
+      .status(Enum.HTTP_CODES.CREATED)
+      .json(Response.successResponse(req.body, Enum.HTTP_CODES.CREATED));
   } catch (err) {
     let errorResponse = Response.errorResponse(err);
     res.status(errorResponse.code).json(Response.errorResponse(err));
