@@ -141,6 +141,13 @@ router.get("/", async (req, res) => {
   try {
     let users = await Users.find({}, { password: 0 }).lean();
 
+    for (let i = 0; i < users.length; i++) {
+      let roles = await UserRoles.find({ user_id: users[i]._id }).populate(
+        "role_id",
+      );
+      users[i].roles = roles;
+    }
+
     res.json(Response.successResponse(users));
   } catch (error) {
     let errorResponse = Response.errorResponse(error);
