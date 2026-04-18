@@ -18,7 +18,13 @@ router.all("*", auth.authenticate(), (req, res, next) => {
 
 router.get("/", async (req, res) => {
   try {
-    let roles = await Roles.find({});
+    let roles = await Roles.find({}).lean();
+
+    for (let i = 0; i < roles.length; i++) {
+      let permissions = await RolePrivileges.find({ role_id: roles[i]._id });
+      roles[i].permissions = permissions;
+    }
+
     res.json(Response.successResponse(roles));
   } catch (error) {
     let errorResponse = Response.errorResponse(error);
