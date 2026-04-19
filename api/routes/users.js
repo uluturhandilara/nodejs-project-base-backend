@@ -217,6 +217,12 @@ router.post("/add", async (req, res) => {
       );
     }
 
+    if (body._id == req.user.id) {
+      // throw new CustomError(Enum.HTTP_CODES.FORBIDDEN, i18n.translate("COMMON.NEED_PERMISSIONS", req.user.language), i18n.translate("COMMON.NEED_PERMISSIONS", req.user.language))
+      // error mesaj yerine role hariç diğer bilgileri ekleyebilsin istiyoruz
+      body.roles = null;
+    }
+
     let roles = await Roles.find({ _id: { $in: body.roles } });
 
     if (roles.length == 0) {
